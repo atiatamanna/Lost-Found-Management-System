@@ -1,0 +1,240 @@
+package com.smartlostfound.view;
+
+import com.smartlostfound.controller.LostFoundController;
+import com.smartlostfound.model.FoundItem;
+import com.smartlostfound.model.Item;
+import com.smartlostfound.model.LostItem;
+import com.smartlostfound.model.User;
+
+import javax.swing.*;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
+
+/**
+ * Inspection modal dialog presenting full item specifications, photo banner,
+ * verified reporter contact information, and audit lifecycle notes.
+ */
+public class ItemDetailDialog extends JDialog {
+
+    private final Item item;
+    private final LostFoundController controller;
+
+    public ItemDetailDialog(Window owner, Item item, LostFoundController controller) {
+        super(owner, "Property Intelligence Report: " + item.getId(), ModalityType.APPLICATION_MODAL);
+        this.item = item;
+        this.controller = controller;
+
+        initComponents();
+        GraphicsConfiguration gc = getGraphicsConfiguration();
+        Rectangle screen = gc != null ? gc.getBounds() : new Rectangle(0, 0, 1280, 800);
+        int dialogW = Math.min(720, (int) (screen.width * 0.94));
+        int dialogH = Math.min(640, (int) (screen.height * 0.90));
+        setSize(dialogW, dialogH);
+        setMinimumSize(new Dimension(Math.min(580, screen.width - 40), Math.min(440, screen.height - 40)));
+        setLocationRelativeTo(owner);
+    }
+
+    private void initComponents() {
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(UIUtils.COLOR_BACKGROUND);
+
+        // Header Panel with Obsidian Gradient
+        JPanel headerPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                GradientPaint gp = new GradientPaint(0, 0, UIUtils.COLOR_SIDEBAR_TOP, 0, getHeight(), UIUtils.COLOR_SIDEBAR_BOTTOM);
+                g2.setPaint(gp);
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        headerPanel.setOpaque(false);
+        headerPanel.setBorder(new EmptyBorder(18, 24, 18, 24));
+
+        JPanel headerLeft = new JPanel(new GridLayout(2, 1, 2, 4));
+        headerLeft.setOpaque(false);
+
+        JLabel typeAndIdLabel = new JLabel(item.getItemType().toUpperCase() + " PROPERTY  •  " + item.getId());
+        typeAndIdLabel.setFont(new Font(UIUtils.FONT_FAMILY, Font.BOLD, 12));
+        typeAndIdLabel.setForeground(item instanceof LostItem ? new Color(248, 113, 113) : new Color(147, 197, 253));
+
+        JLabel titleLabel = new JLabel(item.getName());
+        titleLabel.setFont(UIUtils.FONT_HEADER);
+        titleLabel.setForeground(Color.WHITE);
+
+        headerLeft.add(typeAndIdLabel);
+        headerLeft.add(titleLabel);
+
+        // Status Badge in header
+        JPanel statusBadge = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
+        statusBadge.setOpaque(false);
+        JLabel statusLabel = new JLabel("  " + item.getStatus().getDisplayName().toUpperCase() + "  ");
+        statusLabel.setOpaque(true);
+        statusLabel.setBackground(item.getStatus().getBackgroundColor());
+        statusLabel.setForeground(item.getStatus().getForegroundColor());
+        statusLabel.setFont(new Font(UIUtils.FONT_FAMILY, Font.BOLD, 12));
+        statusLabel.setBorder(new CompoundBorder(
+                new LineBorder(item.getStatus().getForegroundColor(), 1, true),
+                new EmptyBorder(4, 12, 4, 12)
+        ));
+        statusBadge.add(statusLabel);
+
+        headerPanel.add(headerLeft, BorderLayout.CENTER);
+        headerPanel.add(statusBadge, BorderLayout.EAST);
+        add(headerPanel, BorderLayout.NORTH);
+
+        // Content Scroll Pane
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBackground(UIUtils.COLOR_BACKGROUND);
+        contentPanel.setBorder(new EmptyBorder(16, 20, 16, 20));
+
+        // Photo Banner Preview (16:9 Proportion with interactive Lightbox expansion)
+        JLabel photoBanner = new JLabel(ImageHelper.getItemImageThumbnail(item, 620, 310));
+        photoBanner.setAlignmentX(Component.CENTER_ALIGNMENT);
+        photoBanner.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        photoBanner.setToolTipText("Click to inspect photo in high-resolution lightbox viewer");
+        photoBanner.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                new PhotoLightboxDialog(ItemDetailDialog.this, item).setVisible(true);
+            }
+        });
+        contentPanel.add(photoBanner);
+        contentPanel.add(Box.createVerticalStrut(14));
+
+        // Section 1: Item Attributes Card
+        JPanel infoCard = UIUtils.createCardPanel(12);
+        infoCard.setLayout(new GridLayout(0, 2, 14, 10));
+
+        addDetailRow(infoCard, "Category:", item.getCategory().getDisplayName());
+        addDetailRow(infoCard, "Date " + (item instanceof LostItem ? "Lost" : "Discovered") + ":", item.getFormattedDate());
+        addDetailRow(infoCard, "Location " + (item instanceof LostItem ? "Lost" : "Found") + ":", item.getSpecificLocation());
+
+        if (item instanceof LostItem) {
+            LostItem lost = (LostItem) item;
+            addDetailRow(infoCard, "Reward Offered:", lost.getFormattedReward());
+        } else if (item instanceof FoundItem) {
+            FoundItem found = (FoundItem) item;
+            addDetailRow(infoCard, "Custody Storage:", found.getStorageLocation());
+            if (found.getFinderContactInfo() != null && !found.getFinderContactInfo().isEmpty()) {
+                addDetailRow(infoCard, "Finder Contact / Notes:", found.getFinderContactInfo());
+            }
+        }
+
+        addDetailRow(infoCard, "Current Status:", item.getStatus().getDisplayName());
+        addDetailRow(infoCard, "Logged Timestamp:", item.getCreatedAt().format(Item.DATETIME_FORMATTER));
+
+        contentPanel.add(infoCard);
+        contentPanel.add(Box.createVerticalStrut(14));
+
+        // Section 2: Narrative Description Card
+        JPanel descCard = UIUtils.createCardPanel(12);
+        descCard.setLayout(new BorderLayout(5, 8));
+        JLabel descTitle = UIUtils.createFormLabel("Detailed Narrative & Physical Identifiers");
+        JTextArea descArea = new JTextArea(item.getDescription());
+        descArea.setFont(UIUtils.FONT_BODY);
+        descArea.setLineWrap(true);
+        descArea.setWrapStyleWord(true);
+        descArea.setEditable(false);
+        descArea.setBackground(UIUtils.COLOR_SURFACE_ALT);
+        descArea.setBorder(new EmptyBorder(8, 10, 8, 10));
+        descCard.add(descTitle, BorderLayout.NORTH);
+        descCard.add(descArea, BorderLayout.CENTER);
+
+        contentPanel.add(descCard);
+        contentPanel.add(Box.createVerticalStrut(14));
+
+        // Section 3: Reporter / Claim Verification Contact Card
+        JPanel contactCard = UIUtils.createCardPanel(12);
+        contactCard.setLayout(new GridLayout(0, 2, 14, 8));
+        JLabel contactTitle = UIUtils.createFormLabel(item instanceof LostItem ? "Owner Contact Information" : "Finder / Custodian Contact");
+
+        User user = item.getReporter();
+        addDetailRow(contactCard, "Full Name:", (user != null && !user.getName().isEmpty()) ? user.getName() : "Anonymous");
+        addDetailRow(contactCard, "Email:", (user != null && !user.getEmail().isEmpty()) ? user.getEmail() : "None provided");
+        addDetailRow(contactCard, "Phone:", (user != null && !user.getPhone().isEmpty()) ? user.getPhone() : "None provided");
+
+        JPanel contactWrapper = UIUtils.createCardPanel(12);
+        contactWrapper.setLayout(new BorderLayout(5, 8));
+        contactWrapper.add(contactTitle, BorderLayout.NORTH);
+        contactWrapper.add(contactCard, BorderLayout.CENTER);
+
+        contentPanel.add(contactWrapper);
+
+        // Section 4: Resolution Notes (if any)
+        if (item.getResolutionNotes() != null && !item.getResolutionNotes().isEmpty()) {
+            contentPanel.add(Box.createVerticalStrut(14));
+            JPanel notesCard = UIUtils.createCardPanel(12);
+            notesCard.setLayout(new BorderLayout(5, 6));
+            JLabel notesTitle = UIUtils.createFormLabel("Lifecycle & Resolution Audit History");
+            JTextArea notesArea = new JTextArea(item.getResolutionNotes());
+            notesArea.setFont(UIUtils.FONT_BODY);
+            notesArea.setEditable(false);
+            notesArea.setBackground(new Color(240, 253, 244));
+            notesArea.setBorder(new EmptyBorder(8, 10, 8, 10));
+            notesCard.add(notesTitle, BorderLayout.NORTH);
+            notesCard.add(notesArea, BorderLayout.CENTER);
+            contentPanel.add(notesCard);
+        }
+
+        JScrollPane mainScroll = new JScrollPane(contentPanel);
+        mainScroll.setBorder(null);
+        mainScroll.getVerticalScrollBar().setUnitIncrement(14);
+        add(mainScroll, BorderLayout.CENTER);
+
+        // Footer Action Panel
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 12));
+        footerPanel.setBackground(Color.WHITE);
+        footerPanel.setBorder(new CompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, UIUtils.COLOR_BORDER),
+                new EmptyBorder(8, 20, 8, 20)
+        ));
+
+        if (controller.canModifyItem(item)) {
+            JButton deleteBtn = UIUtils.createDangerButton("Delete Record");
+            deleteBtn.addActionListener(e -> {
+                boolean deleted = controller.handleDeleteItem(item.getId(), this);
+                if (deleted) {
+                    dispose();
+                }
+            });
+            footerPanel.add(deleteBtn);
+        }
+
+        JButton updateStatusBtn = UIUtils.createPrimaryButton("Update Status");
+        updateStatusBtn.addActionListener(e -> {
+            Window parentWindow = this.getOwner();
+            dispose();
+            controller.openUpdateStatusDialog(item, parentWindow);
+        });
+
+        JButton closeBtn = UIUtils.createSecondaryButton("Close Window");
+        closeBtn.addActionListener(e -> dispose());
+
+        footerPanel.add(updateStatusBtn);
+        footerPanel.add(closeBtn);
+        add(footerPanel, BorderLayout.SOUTH);
+    }
+
+    private void addDetailRow(JPanel panel, String labelText, String valueText) {
+        JLabel label = new JLabel(labelText);
+        label.setFont(UIUtils.FONT_BODY_BOLD);
+        label.setForeground(UIUtils.COLOR_TEXT_SECONDARY);
+
+        JLabel val = new JLabel((valueText != null && !valueText.isEmpty()) ? valueText : "—");
+        val.setFont(UIUtils.FONT_BODY);
+        val.setForeground(UIUtils.COLOR_TEXT_PRIMARY);
+
+        panel.add(label);
+        panel.add(val);
+    }
+}
