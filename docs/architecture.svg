@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1120" width="100%" role="img" aria-label="Lost and Found System Architecture Diagram">
+  <defs>
+    <!-- Arrowhead Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" fill-opacity="0.7" />
+    </marker>
+    
+    <!-- Layer styles -->
+    <style>
+      .layer-bg { fill: currentColor; fill-opacity: 0.04; stroke: currentColor; stroke-opacity: 0.15; stroke-width: 1.5; rx: 12px; }
+      .layer-title { font-family: sans-serif; font-size: 16px; font-weight: bold; fill: currentColor; }
+      
+      .box { fill: var(--bg, #ffffff); stroke: currentColor; stroke-opacity: 0.3; stroke-width: 1.5; rx: 6px; }
+      @media (prefers-color-scheme: dark) {
+        .box { fill: #1e1e1e; }
+      }
+      .box-highlight { stroke: var(--accent, #0066cc); stroke-width: 2px; }
+      .box-text { font-family: sans-serif; font-size: 14px; fill: currentColor; }
+      .box-text-small { font-family: sans-serif; font-size: 12px; fill: currentColor; fill-opacity: 0.7; }
+      .box-text-bold { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: currentColor; }
+      
+      .flow-line { stroke: currentColor; stroke-opacity: 0.5; stroke-width: 2; fill: none; }
+      .flow-text { font-family: sans-serif; font-size: 13px; font-weight: bold; fill: currentColor; fill-opacity: 0.8; }
+    </style>
+  </defs>
+
+  <!-- =============================== -->
+  <!-- 1. VIEW LAYER                   -->
+  <!-- =============================== -->
+  <rect class="layer-bg" x="40" y="30" width="720" height="240" />
+  <text class="layer-title" x="60" y="65">🖥️ VIEW LAYER (UI)</text>
+  
+  <!-- UI Components -->
+  <rect class="box" x="80" y="90" width="180" height="40" />
+  <text class="box-text" x="170" y="115" text-anchor="middle">MainFrame</text>
+  
+  <rect class="box" x="280" y="90" width="180" height="40" />
+  <text class="box-text" x="370" y="115" text-anchor="middle">DashboardPanel</text>
+  
+  <rect class="box" x="480" y="90" width="180" height="40" />
+  <text class="box-text" x="570" y="115" text-anchor="middle">CommunityFeedPanel</text>
+
+  <rect class="box" x="80" y="145" width="180" height="40" />
+  <text class="box-text" x="170" y="170" text-anchor="middle">ReportLostItemPanel</text>
+  
+  <rect class="box" x="280" y="145" width="180" height="40" />
+  <text class="box-text" x="370" y="170" text-anchor="middle">ReportFoundItemPanel</text>
+  
+  <rect class="box" x="480" y="145" width="180" height="40" />
+  <text class="box-text" x="570" y="170" text-anchor="middle">ItemDetailDialog</text>
+
+  <rect class="box" x="180" y="200" width="180" height="40" />
+  <text class="box-text" x="270" y="225" text-anchor="middle">ItemTableModel</text>
+  
+  <rect class="box" x="380" y="200" width="280" height="40" />
+  <text class="box-text" x="520" y="225" text-anchor="middle">ItemStatusCellRenderer / UpdateDialog</text>
+
+  <!-- Flow down from View to Controller -->
+  <path class="flow-line" marker-end="url(#arrow)" d="M 400 270 L 400 330" />
+  <rect x="410" y="285" width="190" height="25" fill="var(--bg, #ffffff)" opacity="0.8" />
+  <text class="flow-text" x="415" y="303">User Events &amp; UI Updates</text>
+
+  <!-- =============================== -->
+  <!-- 2. CONTROLLER LAYER             -->
+  <!-- =============================== -->
+  <rect class="layer-bg" x="40" y="330" width="720" height="150" />
+  <text class="layer-title" x="60" y="365">⚙️ CONTROLLER LAYER</text>
+
+  <rect class="box box-highlight" x="200" y="380" width="400" height="80" />
+  <text class="box-text-bold" x="400" y="405" text-anchor="middle">LostFoundController</text>
+  <text class="box-text-small" x="400" y="425" text-anchor="middle">• Handles user interactions • Validates input data</text>
+  <text class="box-text-small" x="400" y="443" text-anchor="middle">• Coordinates workflows • Invokes services</text>
+
+  <!-- Flow down from Controller to Model/Service -->
+  <path class="flow-line" marker-end="url(#arrow)" d="M 400 480 L 400 540" />
+  <rect x="410" y="495" width="140" height="25" fill="var(--bg, #ffffff)" opacity="0.8" />
+  <text class="flow-text" x="415" y="513">Business Operations</text>
+
+  <!-- =============================== -->
+  <!-- 3. MODEL & SERVICE LAYER        -->
+  <!-- =============================== -->
+  <rect class="layer-bg" x="40" y="540" width="720" height="260" />
+  <text class="layer-title" x="60" y="575">📦 MODEL &amp; 🛠️ SERVICE LAYER</text>
+
+  <!-- Model Domain (Left side) -->
+  <rect class="box" x="80" y="590" width="310" height="180" stroke-dasharray="5,5" />
+  <text class="box-text-bold" x="235" y="615" text-anchor="middle">Domain Models</text>
+  
+  <rect class="box" x="145" y="630" width="180" height="35" />
+  <text class="box-text" x="235" y="652" text-anchor="middle">&lt;&lt;Abstract&gt;&gt; Item</text>
+
+  <path class="flow-line" d="M 235 665 L 235 680" />
+  <path class="flow-line" d="M 170 680 L 300 680" />
+  <path class="flow-line" marker-end="url(#arrow)" d="M 170 680 L 170 695" />
+  <path class="flow-line" marker-end="url(#arrow)" d="M 300 680 L 300 695" />
+  
+  <rect class="box" x="100" y="695" width="130" height="30" />
+  <text class="box-text" x="165" y="715" text-anchor="middle">LostItem</text>
+  
+  <rect class="box" x="240" y="695" width="130" height="30" />
+  <text class="box-text" x="305" y="715" text-anchor="middle">FoundItem</text>
+
+  <text class="box-text-small" x="235" y="750" text-anchor="middle">Also: User, ItemCategory, ItemStatus</text>
+
+  <!-- Service Implementation (Right side) -->
+  <rect class="box box-highlight" x="420" y="610" width="310" height="130" />
+  <text class="box-text-bold" x="575" y="640" text-anchor="middle">LostFoundManager</text>
+  <text class="box-text-small" x="575" y="665" text-anchor="middle">• Business Rule Enforcement</text>
+  <text class="box-text-small" x="575" y="685" text-anchor="middle">• Match Search &amp; Filtering</text>
+  <text class="box-text-small" x="575" y="705" text-anchor="middle">• Statistics, Reporting, ID Generation</text>
+
+  <!-- Flow down from Service to Storage -->
+  <path class="flow-line" marker-end="url(#arrow)" d="M 400 800 L 400 850" />
+  <rect x="410" y="810" width="130" height="25" fill="var(--bg, #ffffff)" opacity="0.8" />
+  <text class="flow-text" x="415" y="828">Data Persistence</text>
+
+  <!-- =============================== -->
+  <!-- 4. STORAGE & DATA LAYER         -->
+  <!-- =============================== -->
+  <rect class="layer-bg" x="40" y="850" width="720" height="230" />
+  <text class="layer-title" x="60" y="885">💾 STORAGE LAYER</text>
+
+  <rect class="box" x="250" y="900" width="300" height="40" stroke-dasharray="4,4" />
+  <text class="box-text-bold" x="400" y="925" text-anchor="middle">&lt;&lt;Interface&gt;&gt; ItemStorageService</text>
+
+  <path class="flow-line" marker-end="url(#arrow)" d="M 400 940 L 400 970" />
+  
+  <rect class="box" x="250" y="970" width="300" height="40" />
+  <text class="box-text" x="400" y="995" text-anchor="middle">CsvItemStorageService</text>
+
+  <rect class="box" x="600" y="925" width="100" height="60" stroke-dasharray="2,2" />
+  <text class="box-text-small" x="650" y="952" text-anchor="middle">Throws</text>
+  <text class="box-text-small" x="650" y="968" text-anchor="middle">DataPersistException</text>
+  <path class="flow-line" d="M 550 940 L 600 940" />
+  <path class="flow-line" d="M 550 975 L 600 975" />
+
+  <!-- Data File Cylinder (CSV) -->
+  <path class="box-highlight" d="M 330 1050 C 330 1045, 470 1045, 470 1050 L 470 1090 C 470 1095, 330 1095, 330 1090 Z" fill="var(--bg, #ffffff)" />
+  <ellipse cx="400" cy="1050" rx="70" ry="7" fill="var(--bg, #ffffff)" stroke="var(--accent, #0066cc)" stroke-width="2" />
+  <text class="box-text-bold" x="400" y="1075" text-anchor="middle">data/lost_found_items.csv</text>
+
+  <path class="flow-line" marker-end="url(#arrow)" d="M 400 1010 L 400 1040" />
+
+</svg>
